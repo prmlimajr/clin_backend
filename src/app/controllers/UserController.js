@@ -242,6 +242,38 @@ class UserController {
       ...user,
     });
   }
+
+  async delete(req, res) {
+    Logger.header('controller - user - delete');
+    Logger.log(`[${req.params.id}]`);
+
+    const { id } = req.params;
+
+    const [currentUser] = await knex()
+      .select('users.*')
+      .from('users')
+      .where({ 'users.id': req.userId });
+
+    if (!currentUser.admin) {
+      Logger.error('User is not admin');
+      return res.status(Errors.FORBIDDEN).json({ error: 'User is not admin' });
+    }
+
+    const [userExists] = await knex()
+      .select('users.*')
+      .from('users')
+      .where({ 'users.id': id });
+
+    if (!userExists) {
+      Logger.error('User not found');
+
+      return res.status(Errors.NOT_FOUND).json({ error: 'User not found' });
+    }
+
+    await knex('users').del().where({ 'users.id': id });
+
+    return res.json({ deleted: id });
+  }
 }
 
 module.exports = new UserController();
