@@ -4,6 +4,7 @@ const cors = require('cors');
 const rfr = require('rfr');
 const helmet = require('helmet');
 
+const Logger = rfr('src/lib/logger');
 const routes = rfr('src/routes');
 
 const app = express();
@@ -16,5 +17,5 @@ app.use(helmet());
 app.use(routes);
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://${BACKEND_SERVER_HOST}:${PORT}/`);
+  Logger.connection(`Server running on http://${BACKEND_SERVER_HOST}:${PORT}/`);
 });
