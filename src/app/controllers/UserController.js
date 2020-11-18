@@ -64,6 +64,30 @@ class UserController {
       ...user,
     });
   }
+
+  async list(req, res) {
+    Logger.header('controller - users - list');
+
+    const userList = await knex().select('users.*').from('users');
+
+    if (userList.length === 0) {
+      Logger.error('Empty list');
+      return res.json({ error: 'Empty list' });
+    }
+
+    const users = userList.map((row) => {
+      return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        admin: row.admin,
+        created_at: row.created_at,
+        updated_at: row.update_at,
+      };
+    });
+
+    return res.json(users);
+  }
 }
 
 module.exports = new UserController();

@@ -6,5 +6,6 @@ const routes = express.Router();
 const UserController = rfr('src/app/controllers/UserController');
 
 routes.post('/users', UserController.create);
+routes.get('/users', UserController.list);
 
 module.exports = routes;
