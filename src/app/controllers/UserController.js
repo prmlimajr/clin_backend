@@ -8,7 +8,7 @@ const { SORT } = rfr('src/lib/helpers');
 
 class UserController {
   async create(req, res) {
-    Logger.log('controller - user - create');
+    Logger.header('controller - user - create');
 
     const { name, email, password, confirmPassword } = req.body;
 
@@ -77,7 +77,7 @@ class UserController {
   async list(req, res) {
     Logger.header('controller - users - list');
 
-    const userList = await knex().select('users.*').from('users');
+    const userList = await knex('users').select('users.*').from('users');
 
     if (userList.length === 0) {
       Logger.error('Empty list');
@@ -105,9 +105,8 @@ class UserController {
 
     const { id } = req.params;
 
-    const [userExists] = await knex
+    const [userExists] = await knex('users')
       .select('users.*')
-      .from('users')
       .where({ 'users.id': id });
 
     if (!userExists) {
@@ -122,7 +121,7 @@ class UserController {
       email: userExists.email,
       admin: userExists.admin,
       created_at: userExists.created_at,
-      update_at: userExists.update_at,
+      update_at: userExists.updated_at,
     };
 
     return res.json(user);
@@ -133,9 +132,8 @@ class UserController {
 
     const { search, page, perPage } = req.query;
 
-    const query = knex
+    const query = knex('users')
       .select('users.*')
-      .from('users')
       .offset((page - 1) * perPage)
       .limit(perPage);
 
@@ -190,14 +188,12 @@ class UserController {
         .json({ error: 'Validation failed' });
     }
 
-    const [currentUser] = await knex
+    const [currentUser] = await knex('users')
       .select('users.*')
-      .from('users')
       .where({ 'users.id': req.userId });
 
-    const [userToUpdate] = await knex
+    const [userToUpdate] = await knex('users')
       .select('users.*')
-      .from('users')
       .where({ 'users.id': id });
 
     if (!currentUser.admin && currentUser.id !== userToUpdate.id) {
@@ -249,9 +245,8 @@ class UserController {
 
     const { id } = req.params;
 
-    const [currentUser] = await knex()
+    const [currentUser] = await knex('users')
       .select('users.*')
-      .from('users')
       .where({ 'users.id': req.userId });
 
     if (!currentUser.admin) {
@@ -259,9 +254,8 @@ class UserController {
       return res.status(Errors.FORBIDDEN).json({ error: 'User is not admin' });
     }
 
-    const [userExists] = await knex()
+    const [userExists] = await knex('users')
       .select('users.*')
-      .from('users')
       .where({ 'users.id': id });
 
     if (!userExists) {
