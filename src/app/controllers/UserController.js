@@ -204,16 +204,13 @@ class UserController {
         .json({ error: 'Only admins can update other users' });
     }
 
-    /**
-     * Validates if the inputed password is the same as stored password
-     */
     const checkPassword = (password) => {
-      return bcrypt.compare(password, userExists.password_hash);
+      return bcrypt.compare(password, userToUpdate.password);
     };
 
     const hashedPassword = newPassword
       ? await bcrypt.hash(newPassword, 8)
-      : userExists.password;
+      : userToUpdate.password;
 
     if (password && !(await checkPassword(password))) {
       Logger.error('Password does not match');
@@ -223,15 +220,15 @@ class UserController {
     }
 
     const user = {
-      name: name.trim() || userExists.name,
-      email: email || userExists.email,
+      name: name ? name.trim() : userToUpdate.name,
+      email: email || userToUpdate.email,
       password: hashedPassword,
-      admin: userExists.admin,
-      created_at: userExists.created_at,
-      update_at: new Date(),
+      admin: userToUpdate.admin,
+      created_at: userToUpdate.created_at,
+      updated_at: new Date(),
     };
 
-    await knex('users').update(user).where({ 'user.id': id });
+    await knex('users').update(user).where({ 'users.id': id });
 
     return res.json({
       id,

@@ -33,24 +33,21 @@ class AdminController {
         .json({ error: 'User does not exist' });
     }
 
-    if (userExists.admin) {
-      Logger.error('User is admin already');
+    // if (userExists.admin) {
+    //   Logger.error('User is admin already');
 
-      return res
-        .status(Errors.PRECONDITION_FAILED)
-        .json({ error: 'User is admin already' });
-    }
+    //   return res
+    //     .status(Errors.PRECONDITION_FAILED)
+    //     .json({ error: 'User is admin already' });
+    // }
 
     const user = {
-      name: userExists.name,
-      email: userExists.email,
-      password: userExists.password,
       admin: !userExists.admin,
-      created_at: userExists.created_at,
+
       updated_at: new Date(),
     };
 
-    await knex('users').update(user).where({ 'user.id': id });
+    await knex('users').update(user).where({ 'users.id': id });
 
     return res.json({
       id,
