@@ -169,6 +169,42 @@ class PatientController {
       updated_at: patientExists.updated_at,
     };
 
+    const conditionsQuery = await knex('health_conditions')
+      .select('health_conditions.*')
+      .where({
+        'health_conditions.patientId': id,
+        'health_conditions.relativeId': null,
+      });
+
+    let rows = await conditionsQuery;
+    const conditions = rows.map((row) => row.description);
+    patient.conditions = conditions;
+
+    const relativeIds = await knex('relatives')
+      .select('relatives.*')
+      .where({ 'relatives.patientId': id });
+
+    patient.relativeConditions = [];
+
+    for (let relativeId of relativeIds) {
+      const relativeCondition = await knex('health_conditions')
+        .select('health_conditions.*', 'relatives.description as relative')
+        .leftJoin('relatives', 'relatives.id', 'health_conditions.relativeId')
+        .where({
+          'health_conditions.patientId': id,
+          'relatives.id': relativeId.id,
+        });
+
+      const [relative] = relativeCondition.map((row) => {
+        return {
+          relative: row.relative,
+          condition: row.description,
+        };
+      });
+
+      patient.relativeConditions.push(relative);
+    }
+
     return res.json(patient);
   }
 
