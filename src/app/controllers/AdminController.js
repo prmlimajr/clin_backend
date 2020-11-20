@@ -33,14 +33,6 @@ class AdminController {
         .json({ error: 'User does not exist' });
     }
 
-    // if (userExists.admin) {
-    //   Logger.error('User is admin already');
-
-    //   return res
-    //     .status(Errors.PRECONDITION_FAILED)
-    //     .json({ error: 'User is admin already' });
-    // }
-
     const user = {
       admin: !userExists.admin,
 
