@@ -6,7 +6,8 @@ const routes = express.Router();
 const UserController = rfr('src/app/controllers/UserController');
 const AdminController = rfr('src/app/controllers/AdminController');
 const SessionCrontroller = rfr('src/app/controllers/SessionCrontroller');
-const PatientController = require('./app/controllers/PatientController');
+const PatientController = rfr('src/app/controllers/PatientController');
+const HealthCondition = rfr('src/app/controllers/HealthCondition');
 
 const authConfig = rfr('src/app/middlewares/auth');
 
@@ -27,5 +28,6 @@ routes.get('/patient/lazy', PatientController.lazyList);
 routes.get('/patient/:id', PatientController.listOne);
 routes.put('/patient/:id', PatientController.update);
 routes.delete('/patient/:id', PatientController.delete);
+routes.post('/health-condition', HealthCondition.create);
 
 module.exports = routes;
