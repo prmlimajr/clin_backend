@@ -29,5 +29,7 @@ routes.get('/patient/:id', PatientController.listOne);
 routes.put('/patient/:id', PatientController.update);
 routes.delete('/patient/:id', PatientController.delete);
 routes.post('/health-condition', HealthCondition.create);
+routes.put('/health-condition/:id', HealthCondition.update);
+routes.delete('/health-condition/:id', HealthCondition.delete);
 
 module.exports = routes;

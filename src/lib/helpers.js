@@ -5,8 +5,8 @@ exports.SORT = (a, b) => {
   if (a.admin < b.admin) {
     return 1;
   }
-  let nameA = a.name.toUpperCase();
-  let nameB = b.name.toUpperCase();
+  let nameA = a.name;
+  let nameB = b.name;
   if (nameB > nameA) {
     return -1;
   }

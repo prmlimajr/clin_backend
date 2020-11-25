@@ -11,6 +11,7 @@ class UserController {
     Logger.header('controller - user - create');
 
     const { name, email, password, confirmPassword } = req.body;
+    Logger.log(`[${name}][${email}][${password}][${confirmPassword}]`);
 
     const schema = Yup.object().shape({
       name: Yup.string().required(),
@@ -25,6 +26,14 @@ class UserController {
       return res
         .status(Errors.BAD_REQUEST)
         .json({ error: 'Validation failed' });
+    }
+
+    if (!req.isAdmin) {
+      Logger.error('You do not have authorization');
+
+      return res
+        .status(Errors.FORBIDDEN)
+        .json({ error: 'You do not have authorization' });
     }
 
     const [userAlreadyExists] = await knex
@@ -54,6 +63,7 @@ class UserController {
       email,
       password: hashedPassword,
       admin: false,
+      type: 1,
       created_at: new Date(),
       updated_at: new Date(),
     };
@@ -167,25 +177,16 @@ class UserController {
     const { id } = req.params;
     const { name, email, password, newPassword, confirmPassword } = req.body;
 
-    const schema = Yup.object().shape({
-      name: Yup.string(),
-      email: Yup.string().email(),
-      password: Yup.string().min(6),
-      newPassword: Yup.string()
-        .min(6)
-        .when('password', (password, field) =>
-          password ? field.required() : field
-        ),
-      confirmPassword: Yup.string().when('newPassword', (newPassword, field) =>
-        newPassword ? field.required().oneOf([Yup.ref('newPassword')]) : field
-      ),
-    });
+    Logger.log(
+      `[${name}][${email}][${password}][${newPassword}][${confirmPassword}]`
+    );
 
-    if (!(await schema.isValid(req.body))) {
-      Logger.error('Validation failed');
+    if (password && newPassword !== confirmPassword) {
+      Logger.error('Passwords does not match');
+
       return res
-        .status(Errors.BAD_REQUEST)
-        .json({ error: 'Validation failed' });
+        .status(Errors.PRECONDITION_FAILED)
+        .json({ error: 'Passwords does not match' });
     }
 
     const [currentUser] = await knex('users')

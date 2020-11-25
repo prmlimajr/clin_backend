@@ -12,6 +12,7 @@ class PatientController {
     Logger.header('controller - patient - create');
 
     const { name, birthday, genderId, cpf } = req.body;
+    Logger.log(`[${name}][${birthday}][${genderId}][${cpf}]`);
 
     const schema = Yup.object().shape({
       name: Yup.string().required(),
@@ -104,6 +105,7 @@ class PatientController {
     Logger.header('controller - patients - lazyList');
 
     const { search, page, perPage } = req.query;
+    console.log(req.query);
 
     const query = knex('patients')
       .select('patients.*', 'genders.description as gender')
@@ -126,7 +128,7 @@ class PatientController {
       return {
         id: row.id,
         name: row.name.toUpperCase(),
-        birthday: row.birthday,
+        birthday: dateFns.format(row.birthday, 'dd/MM/yyyy'),
         age: dateFns.differenceInYears(new Date(), row.birthday),
         gender: row.gender,
         cpf: cpfValidator.format(row.cpf),
@@ -173,37 +175,42 @@ class PatientController {
       .select('health_conditions.*')
       .where({
         'health_conditions.patientId': id,
-        'health_conditions.relativeId': null,
       });
 
     let rows = await conditionsQuery;
-    const conditions = rows.map((row) => row.description);
+    const conditions = rows.map((row) => {
+      return {
+        id: row.id,
+        description: row.description,
+        relative: row.relativeId,
+      };
+    });
     patient.conditions = conditions;
 
-    const relativeIds = await knex('relatives')
-      .select('relatives.*')
-      .where({ 'relatives.patientId': id });
+    // const relativeIds = await knex('relatives')
+    //   .select('relatives.*')
+    //   .where({ 'relatives.patientId': id });
 
-    patient.relativeConditions = [];
+    // patient.relativeConditions = [];
 
-    for (let relativeId of relativeIds) {
-      const relativeCondition = await knex('health_conditions')
-        .select('health_conditions.*', 'relatives.description as relative')
-        .leftJoin('relatives', 'relatives.id', 'health_conditions.relativeId')
-        .where({
-          'health_conditions.patientId': id,
-          'relatives.id': relativeId.id,
-        });
+    // for (let relativeId of relativeIds) {
+    //   const relativeCondition = await knex('health_conditions')
+    //     .select('health_conditions.*', 'relatives.description as relative')
+    //     .leftJoin('relatives', 'relatives.id', 'health_conditions.relativeId')
+    //     .where({
+    //       'health_conditions.patientId': id,
+    //       'relatives.id': relativeId.id,
+    //     });
 
-      const [relative] = relativeCondition.map((row) => {
-        return {
-          relative: row.relative,
-          condition: row.description,
-        };
-      });
+    //   const [relative] = relativeCondition.map((row) => {
+    //     return {
+    //       relative: row.relative,
+    //       condition: row.description,
+    //     };
+    //   });
 
-      patient.relativeConditions.push(relative);
-    }
+    //   patient.relativeConditions.push(relative);
+    // }
 
     return res.json(patient);
   }
@@ -265,7 +272,9 @@ class PatientController {
 
     const update = {
       name: name ? name.trim() : patientExists.name,
-      birthday: birthday || patientExists.birthday,
+      birthday:
+        dateFns.format(dateFns.parseISO(birthday), 'yyyy-MM-dd') ||
+        patientExists.birthday,
       genderId: genderId || patientExists.genderId,
       cpf: cpf || patientExists.cpf,
       created_at: patientExists.created_at,
@@ -301,6 +310,17 @@ class PatientController {
       Logger.error('Patient not found');
 
       return res.status(Errors.NOT_FOUND).json({ error: 'Patient not found' });
+    }
+
+    const conditionsExists = await knex('health_conditions')
+      .select('health_conditions.*')
+      .where({ 'health_conditions.patientId': id });
+    if (conditionsExists) {
+      for (let condition of conditionsExists) {
+        await knex('health_conditions')
+          .del()
+          .where({ 'health_conditions.id': condition.id });
+      }
     }
 
     await knex('patients').del().where({ 'patients.id': id });
