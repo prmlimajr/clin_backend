@@ -81,16 +81,22 @@ class PatientController {
     Logger.header('controller - patient - list');
 
     const patientsList = await knex('patients')
-      .select('patients.*', 'genders.description as gender')
-      .join('genders', 'patients.genderId', 'genders.id');
+      .select(
+        'patients.*',
+        'genders.description as gender',
+        'users.name as doctor'
+      )
+      .join('genders', 'patients.genderId', 'genders.id')
+      .join('users', 'users.id', 'patients.userId');
 
     const patients = patientsList.map((row) => {
       return {
         id: row.id,
         name: row.name.toUpperCase(),
-        birthday: row.birthday,
+        birthday: dateFns.format(row.birthday, 'dd/MM/yyyy'),
         age: dateFns.differenceInYears(new Date(), row.birthday),
         gender: row.gender,
+        doctor: row.doctor,
         cpf: cpfValidator.format(row.cpf),
         created_at: row.created_at,
         updated_at: row.updated_at,
@@ -98,7 +104,7 @@ class PatientController {
     });
 
     patients.sort(SORT);
-
+    console.log(patients);
     return res.json(patients);
   }
 
@@ -177,7 +183,7 @@ class PatientController {
     const patient = {
       id: patientExists.id,
       name: patientExists.name.toUpperCase(),
-      birthday: patientExists.birthday,
+      birthday: dateFns.format(patientExists.birthday, 'dd/MM/yyyy'),
       age: dateFns.differenceInYears(new Date(), patientExists.birthday),
       gender: patientExists.gender,
       doctor: patientExists.doctor,

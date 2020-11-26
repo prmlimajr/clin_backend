@@ -8,6 +8,7 @@ const AdminController = rfr('src/app/controllers/AdminController');
 const SessionCrontroller = rfr('src/app/controllers/SessionCrontroller');
 const PatientController = rfr('src/app/controllers/PatientController');
 const HealthCondition = rfr('src/app/controllers/HealthCondition');
+const DashboardController = require('./app/controllers/DashboardController');
 
 const authConfig = rfr('src/app/middlewares/auth');
 
@@ -31,5 +32,6 @@ routes.delete('/patient/:id', PatientController.delete);
 routes.post('/health-condition', HealthCondition.create);
 routes.put('/health-condition/:id', HealthCondition.update);
 routes.delete('/health-condition/:id', HealthCondition.delete);
+routes.get('/dashboard/lazy', DashboardController.lazyList);
 
 module.exports = routes;
