@@ -196,7 +196,8 @@ class PatientController {
       .select('health_conditions.*')
       .where({
         'health_conditions.patientId': id,
-      });
+      })
+      .orderBy('health_conditions.relative');
 
     let rows = await conditionsQuery;
     const conditions = rows.map((row) => {
