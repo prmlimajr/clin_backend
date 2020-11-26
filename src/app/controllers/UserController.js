@@ -28,14 +28,6 @@ class UserController {
         .json({ error: 'Validation failed' });
     }
 
-    if (!req.isAdmin) {
-      Logger.error('You do not have authorization');
-
-      return res
-        .status(Errors.FORBIDDEN)
-        .json({ error: 'You do not have authorization' });
-    }
-
     const [userAlreadyExists] = await knex
       .select('users.*')
       .from('users')
