@@ -55,6 +55,7 @@ class PatientController {
       name: name.trim(),
       birthday,
       genderId,
+      userId: req.userId,
       cpf,
       created_at: new Date(),
       updated_at: new Date(),
@@ -108,8 +109,14 @@ class PatientController {
     console.log(req.query);
 
     const query = knex('patients')
-      .select('patients.*', 'genders.description as gender')
+      .select(
+        'patients.*',
+        'genders.description as gender',
+        'users.name as doctor'
+      )
       .join('genders', 'patients.genderId', 'genders.id')
+      .join('users', 'users.id', 'patients.userId')
+      .where({ 'patients.userId': req.userId })
       .offset((page - 1) * perPage)
       .limit(perPage);
 
@@ -119,6 +126,7 @@ class PatientController {
         builder.orWhere('patients.birthday', 'like', `%${search}%`);
         builder.orWhere('patients.cpf', 'like', `%${search}%`);
         builder.orWhere('genders.description', 'like', `%${search}%`);
+        builder.orWhere('users.name', 'like', `%${search}%`);
       });
     }
 
@@ -131,6 +139,7 @@ class PatientController {
         birthday: dateFns.format(row.birthday, 'dd/MM/yyyy'),
         age: dateFns.differenceInYears(new Date(), row.birthday),
         gender: row.gender,
+        doctor: row.doctor,
         cpf: cpfValidator.format(row.cpf),
         created_at: row.created_at,
         updated_at: row.updated_at,
@@ -148,8 +157,13 @@ class PatientController {
     Logger.log(`[${id}]`);
 
     const [patientExists] = await knex('patients')
-      .select('patients.*', 'genders.description as gender')
+      .select(
+        'patients.*',
+        'genders.description as gender',
+        'users.name as doctor'
+      )
       .join('genders', 'genders.id', 'patients.genderId')
+      .join('users', 'users.id', 'patients.userId')
       .where({ 'patients.id': id });
 
     if (!patientExists) {
@@ -166,6 +180,7 @@ class PatientController {
       birthday: patientExists.birthday,
       age: dateFns.differenceInYears(new Date(), patientExists.birthday),
       gender: patientExists.gender,
+      doctor: patientExists.doctor,
       cpf: cpfValidator.format(patientExists.cpf),
       created_at: patientExists.created_at,
       updated_at: patientExists.updated_at,
@@ -182,35 +197,10 @@ class PatientController {
       return {
         id: row.id,
         description: row.description,
-        relative: row.relativeId,
+        relative: row.relative,
       };
     });
     patient.conditions = conditions;
-
-    // const relativeIds = await knex('relatives')
-    //   .select('relatives.*')
-    //   .where({ 'relatives.patientId': id });
-
-    // patient.relativeConditions = [];
-
-    // for (let relativeId of relativeIds) {
-    //   const relativeCondition = await knex('health_conditions')
-    //     .select('health_conditions.*', 'relatives.description as relative')
-    //     .leftJoin('relatives', 'relatives.id', 'health_conditions.relativeId')
-    //     .where({
-    //       'health_conditions.patientId': id,
-    //       'relatives.id': relativeId.id,
-    //     });
-
-    //   const [relative] = relativeCondition.map((row) => {
-    //     return {
-    //       relative: row.relative,
-    //       condition: row.description,
-    //     };
-    //   });
-
-    //   patient.relativeConditions.push(relative);
-    // }
 
     return res.json(patient);
   }

@@ -19,19 +19,6 @@ class HealthCondition {
 
     description = description.trim().toLowerCase();
 
-    // const schema = Yup.object().shape({
-    //   description: Yup.string().required(),
-    //   relative: Yup.number(),
-    // });
-
-    // if (!(await schema.isValid(req.body))) {
-    //   Logger.error('Validation failed');
-
-    //   return res
-    //     .status(Errors.BAD_REQUEST)
-    //     .json({ error: 'Validation failed' });
-    // }
-
     const [patientExists] = await knex('patients')
       .select('patients.*')
       .where({ 'patients.id': patientId });
@@ -47,6 +34,7 @@ class HealthCondition {
       .where({
         'health_conditions.patientId': patientId,
         'health_conditions.description': description,
+        'health_conditions.relative': relative,
       });
 
     if (conditionExists) {
@@ -57,58 +45,9 @@ class HealthCondition {
         .json({ error: 'Health conditions already in the list' });
     }
 
-    // if (relative) {
-    //   relative = relative.trim().toLowerCase();
-
-    //   const [relativeIdExists] = await knex('relatives')
-    //     .select('relatives.*')
-    //     .where({
-    //       'relatives.patientId': patientId,
-    //       'relatives.description': relative,
-    //     });
-
-    //   if (!relativeIdExists) {
-    //     const [relativeId] = await knex('relatives').insert({
-    //       'relatives.patientId': patientId,
-    //       'relatives.description': relative,
-    //     });
-
-    //     const [relativeConditionExists] = await knex('health_conditions')
-    //       .select('health_conditions.*')
-    //       .where({
-    //         'health_conditions.patientId': patientId,
-    //         'health_conditions.description': description,
-    //         'health_conditions.relativeId': relativeId,
-    //       });
-
-    //     if (relativeConditionExists) {
-    //       Logger.error('Family history already registered');
-
-    //       return res
-    //         .status(Errors.BAD_REQUEST)
-    //         .json({ error: 'Family history already registered' });
-    //     }
-
-    //     const condition = {
-    //       patientId,
-    //       relativeId,
-    //       description,
-    //       created_at: new Date(),
-    //       updated_at: new Date(),
-    //     };
-
-    //     const [id] = await knex('health_conditions').insert(condition, 'id');
-
-    //     return res.json({
-    //       id,
-    //       ...condition,
-    //     });
-    //   }
-    // }
-
     const condition = {
       patientId,
-      relativeId: relative,
+      relative,
       description,
       created_at: new Date(),
       updated_at: new Date(),
@@ -134,7 +73,6 @@ class HealthCondition {
     const schema = Yup.object().shape({
       patientId: Yup.number().positive(),
       description: Yup.string(),
-      relative: Yup.string(),
     });
 
     if (!(await schema.isValid(req.body))) {

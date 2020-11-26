@@ -63,7 +63,6 @@ class UserController {
       email,
       password: hashedPassword,
       admin: false,
-      type: 1,
       created_at: new Date(),
       updated_at: new Date(),
     };
